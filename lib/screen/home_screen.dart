@@ -5,6 +5,15 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold();
+    return Scaffold(
+      body: Column(
+        children: [
+          Image.asset("asset/image/logo.png"),
+          Row(
+            children: [Text("VIDEO"), Text('Player')],
+          )
+        ],
+      ),
+    );
   }
 }
