@@ -1,42 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  XFile? video;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.orange, Colors.white],
+      body: video == null ? renderEmpty() : renderVideo(),
+    );
+  }
+
+  Widget renderVideo() {
+    return Center(
+      child: Text('video'),
+    );
+  }
+
+  Widget renderEmpty() {
+    return SafeArea(
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.orange, Colors.white],
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _Logo(
+              onTap: onLogoTap,
             ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _Logo(),
-              _AppName(),
-            ],
-          ),
+            _AppName(),
+          ],
         ),
       ),
     );
   }
+
+  void onLogoTap() async {
+    final video = await ImagePicker().pickVideo(
+      source: ImageSource.gallery,
+    );
+
+    if (video != null) {
+      setState(() {
+        this.video = video;
+      });
+    }
+  }
 }
 
 class _Logo extends StatelessWidget {
-  const _Logo({super.key});
+  final VoidCallback onTap;
+
+  const _Logo({super.key, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Image.asset(
-        "asset/image/logo.png",
+      child: GestureDetector(
+        onTap: onTap,
+        child: Image.asset(
+          "asset/image/logo.png",
+        ),
       ),
     );
   }
