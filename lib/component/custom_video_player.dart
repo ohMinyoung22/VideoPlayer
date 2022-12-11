@@ -15,6 +15,7 @@ class CustomVideoPlayer extends StatefulWidget {
 
 class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   VideoPlayerController? videoController;
+  Duration currentPosition = Duration();
 
   @override
   void initState() {
@@ -30,7 +31,13 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   initializeController() async {
     await videoController!.initialize();
 
-    setState(() {});
+    videoController!.addListener(() {
+      final currentPosition = videoController!.value.position;
+    });
+
+    setState(() {
+      this.currentPosition = currentPosition;
+    });
   }
 
   @override
@@ -52,21 +59,29 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                 onReversePressed: onReversePressed,
                 isPlaying: videoController!.value.isPlaying,
               ),
-              Positioned(
-                right: 0,
-                child: IconButton(
-                  onPressed: () {},
-                  color: Colors.white,
-                  iconSize: 30.0,
-                  icon: Icon(
-                    Icons.photo_camera_back,
-                  ),
-                ),
+              _NewVideo(
+                onPressed: onNewVideoPressed,
               ),
+              _SliderBottom(
+                  currentPosition: currentPosition,
+                  maxPosition: videoController!.value.duration,
+                  onSliderChanged: onSliderChanged)
             ],
           ));
     }
   }
+
+  void onSliderChanged(double val) {
+    setState(() {
+      videoController!.seekTo(
+        Duration(
+          seconds: val.toInt(),
+        ),
+      );
+    });
+  }
+
+  void onNewVideoPressed() {}
 
   void onReversePressed() {
     final currentPosition = videoController!.value.position;
@@ -87,6 +102,8 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     if (maxPosition - currentPosition > const Duration(seconds: 3)) {
       position = currentPosition + const Duration(seconds: 3);
     }
+
+    videoController!.seekTo(position);
   }
 
   void onPlayPressed() {
@@ -144,6 +161,72 @@ class _Controls extends StatelessWidget {
       onPressed: onPressed,
       icon: Icon(
         iconData,
+      ),
+    );
+  }
+}
+
+class _NewVideo extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  _NewVideo({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      right: 0,
+      child: IconButton(
+        onPressed: onPressed,
+        color: Colors.white,
+        iconSize: 30.0,
+        icon: Icon(
+          Icons.photo_camera_back,
+        ),
+      ),
+    );
+  }
+}
+
+class _SliderBottom extends StatelessWidget {
+  final Duration currentPosition;
+  final Duration maxPosition;
+  final ValueChanged<double> onSliderChanged;
+
+  const _SliderBottom({
+    super.key,
+    required this.currentPosition,
+    required this.maxPosition,
+    required this.onSliderChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 8.0,
+        ),
+        child: Row(
+          children: [
+            Text(
+              '${currentPosition.inMinutes.toString().padLeft(2, '0')} : ${(currentPosition.inSeconds % 60).toString().padLeft(2, '0')}',
+            ),
+            Expanded(
+              child: Slider(
+                value: currentPosition.inSeconds.toDouble(),
+                min: 0.0,
+                max: maxPosition.inSeconds.toDouble(),
+                onChanged: onSliderChanged,
+              ),
+            ),
+            Text(
+              '${maxPosition.inMinutes.toString().padLeft(2, '0')} : ${(maxPosition.inSeconds % 60).toString().padLeft(2, '0')}',
+            ),
+          ],
+        ),
       ),
     );
   }
