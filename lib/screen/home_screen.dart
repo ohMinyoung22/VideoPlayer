@@ -22,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget renderVideo() {
     return CustomVideoPlayer(
       video: video!,
+      onNewVideoPressed: onLogoTap,
     );
   }
 

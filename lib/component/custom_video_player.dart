@@ -6,8 +6,13 @@ import 'package:video_player/video_player.dart';
 
 class CustomVideoPlayer extends StatefulWidget {
   final XFile video;
+  final VoidCallback onNewVideoPressed;
 
-  const CustomVideoPlayer({super.key, required this.video});
+  const CustomVideoPlayer({
+    super.key,
+    required this.video,
+    required this.onNewVideoPressed,
+  });
 
   @override
   State<CustomVideoPlayer> createState() => _CustomVideoPlayerState();
@@ -16,6 +21,7 @@ class CustomVideoPlayer extends StatefulWidget {
 class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   VideoPlayerController? videoController;
   Duration currentPosition = Duration();
+  bool showControls = false;
 
   @override
   void initState() {
@@ -28,7 +34,24 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     initializeController();
   }
 
+  @override
+  void didUpdateWidget(covariant CustomVideoPlayer oldwidget) {
+    super.didUpdateWidget(oldwidget);
+
+    if (oldwidget.video.path != widget.video.path) {
+      initializeController();
+    }
+  }
+
   initializeController() async {
+    currentPosition = Duration();
+
+    videoController = VideoPlayerController.file(
+      File(
+        widget.video.path,
+      ),
+    );
+
     await videoController!.initialize();
 
     videoController!.addListener(() {
@@ -47,26 +70,33 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     } else {
       return AspectRatio(
           aspectRatio: videoController!.value.aspectRatio,
-          child: Stack(
-            children: [
-              VideoPlayer(
-                videoController!,
-              ),
-              //videoPlayer 위에
-              _Controls(
-                onForwardPressed: onForwardPressed,
-                onPlayPressed: onPlayPressed,
-                onReversePressed: onReversePressed,
-                isPlaying: videoController!.value.isPlaying,
-              ),
-              _NewVideo(
-                onPressed: onNewVideoPressed,
-              ),
-              _SliderBottom(
-                  currentPosition: currentPosition,
-                  maxPosition: videoController!.value.duration,
-                  onSliderChanged: onSliderChanged)
-            ],
+          child: GestureDetector(
+            onTap: () {
+              showControls = !showControls;
+            },
+            child: Stack(
+              children: [
+                VideoPlayer(
+                  videoController!,
+                ),
+                //videoPlayer 위에
+                if (showControls)
+                  _Controls(
+                    onForwardPressed: onForwardPressed,
+                    onPlayPressed: onPlayPressed,
+                    onReversePressed: onReversePressed,
+                    isPlaying: videoController!.value.isPlaying,
+                  ),
+                if (showControls)
+                  _NewVideo(
+                    onPressed: widget.onNewVideoPressed,
+                  ),
+                _SliderBottom(
+                    currentPosition: currentPosition,
+                    maxPosition: videoController!.value.duration,
+                    onSliderChanged: onSliderChanged)
+              ],
+            ),
           ));
     }
   }
@@ -80,8 +110,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       );
     });
   }
-
-  void onNewVideoPressed() {}
 
   void onReversePressed() {
     final currentPosition = videoController!.value.position;
@@ -136,19 +164,21 @@ class _Controls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      height: MediaQuery.of(context).size.width,
       color: Colors.black.withOpacity(
         0.5,
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          renderIconButton(onPressed: () {}, iconData: Icons.rotate_left),
-          renderIconButton(
-              onPressed: () {},
-              iconData: isPlaying ? Icons.pause : Icons.play_arrow),
-          renderIconButton(onPressed: () {}, iconData: Icons.rotate_right),
-        ],
+      child: Container(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            renderIconButton(onPressed: () {}, iconData: Icons.rotate_left),
+            renderIconButton(
+                onPressed: () {},
+                iconData: isPlaying ? Icons.pause : Icons.play_arrow),
+            renderIconButton(onPressed: () {}, iconData: Icons.rotate_right),
+          ],
+        ),
       ),
     );
   }
